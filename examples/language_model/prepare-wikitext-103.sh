@@ -2,10 +2,10 @@
 # Adapted from https://github.com/facebookresearch/MIXER/blob/master/prepareData.sh
 
 URLS=(
-    "https://s3.amazonaws.com/research.metamind.io/wikitext/wikitext-103-v1.zip"
+    "https://dax-cdn.cdn.appdomain.cloud/dax-wikitext-103/1.0.1/wikitext-103.tar.gz"
 )
 FILES=(
-    "wikitext-103-v1.zip"
+    "wikitext-103.tar.gz"
 )
 
 for ((i=0;i<${#URLS[@]};++i)); do
@@ -24,6 +24,8 @@ for ((i=0;i<${#URLS[@]};++i)); do
         if [ ${file: -4} == ".tgz" ]; then
             tar zxvf $file
         elif [ ${file: -4} == ".tar" ]; then
+            tar xvf $file
+        elif [ ${file: -7} == ".tar.gz" ]; then
             tar xvf $file
         elif [ ${file: -4} == ".zip" ]; then
             unzip $file
