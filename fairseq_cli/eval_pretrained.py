@@ -40,7 +40,7 @@ class DataLoaderLite:
         # if loading the next batch would be out of bounds, reset position
         if self.current_position + (B * T * self.num_processes + 1) > len(self.tokens):
             self.reset()
-        return x, y
+        return {"net_input" : x, "target" : y}
     
     def __iter__(self):
         for step in range(len(self)):
@@ -48,8 +48,11 @@ class DataLoaderLite:
             
     def __len__(self):
         return len(self.tokens) // (self.B * self.T * self.num_processes)
+
+device = "cuda:" + str(0) if torch.cuda.is_available() else "cpu"
     
 fairseq_model = TransformerLanguageModel.from_pretrained('/base-vol-2/fairseq/models/adaptive_lm_wiki103.v2/', 'model.pt')
+fairseq_model.to(device)
 source_dictionary = Dictionary.load('/base-vol-2/fairseq/models/adaptive_lm_wiki103.v2/dict.txt')
 
 #Load the Datasets
@@ -67,5 +70,5 @@ val_data_loader = DataLoaderLite(val_data, B, T)
 print("Dataloaders instantiated")
 
 
-results = eval_lm([fairseq_model], source_dictionary, val_data_loader)
+results = eval_lm([fairseq_model], source_dictionary, val_data_loader,device=device)
 print(results)
