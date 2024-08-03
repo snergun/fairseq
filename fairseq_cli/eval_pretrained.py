@@ -1,6 +1,10 @@
 from fairseq.models.transformer_lm import TransformerLanguageModel
 from fairseq.data.dictionary import Dictionary
 from fairseq_cli.eval_lm import eval_lm
+import torch
+import json
+from datasets import load_dataset
+import re
 
 def load_and_tokenize(vocab_path, split, unk_id = 3):
     with open(vocab_path, 'r') as file:
@@ -39,7 +43,7 @@ class DataLoaderLite:
         return x, y
     
     def __iter__(self):
-        for step in len(self):
+        for step in range(len(self)):
             yield self.next_batch()
             
     def __len__(self):
@@ -63,4 +67,5 @@ val_data_loader = DataLoaderLite(val_data, B, T)
 print("Dataloaders instantiated")
 
 
-eval_lm(fairseq_model, source_dictionary,val_data_loader)
+results = eval_lm([fairseq_model], source_dictionary, val_data_loader)
+print(results)
