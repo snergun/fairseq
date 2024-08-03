@@ -40,7 +40,7 @@ class DataLoaderLite:
         # if loading the next batch would be out of bounds, reset position
         if self.current_position + (B * T * self.num_processes + 1) > len(self.tokens):
             self.reset()
-        return {"net_input" : x, "target" : y}
+        return {"net_input" : {"src_tokens" : x, "src_lengths" : torch.full((B,), T)}, "target" : y}
     
     def __iter__(self):
         for step in range(len(self)):
