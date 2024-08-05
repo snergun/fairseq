@@ -25,11 +25,13 @@ class DataLoaderLite:
         self.num_processes = num_processes
         self.tokens = tokens
         self.reset()
+        self.id = -1
     def reset(self):
         # state, init at shard zero
         self.current_position = self.B * self.T * self.process_rank
 
     def next_batch(self):
+        self.id += 1
         B, T = self.B, self.T
         buf = self.tokens[self.current_position : self.current_position+B*T+1]
 
@@ -40,7 +42,7 @@ class DataLoaderLite:
         # if loading the next batch would be out of bounds, reset position
         if self.current_position + (B * T * self.num_processes + 1) > len(self.tokens):
             self.reset()
-        return {"net_input" : x, "target" : y}
+        return {"net_input" : {"src_tokens" : x}, "target" : y, "ntokens" : y.size(0) * y.size(1), "id": [self.id]}
     
     def __iter__(self):
         for step in range(len(self)):
@@ -70,5 +72,5 @@ val_data_loader = DataLoaderLite(val_data, B, T)
 print("Dataloaders instantiated")
 
 
-results = eval_lm([fairseq_model], source_dictionary, val_data_loader,device=device)
+results = eval_lm(fairseq_model.models, source_dictionary, val_data_loader,device=device)
 print(results)
