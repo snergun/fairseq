@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python Debugger: Current File with Arguments",
+            "name": "Python Debugger: eval_lm.py.py",
             "type": "debugpy",
             "request": "launch",
             "program": "${file}",
@@ -21,6 +21,28 @@
                 "--context-window",
                 "400"
             ]
+        },
+        {
+            "name": "Python Debugger: preprocess.py.py",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args": [
+                "--only-source",
+                "--trainpref",
+                "examples/language_model/wikitext-103/wiki.train.tokens",
+                "--validpref",
+                "examples/language_model/wikitext-103/wiki.valid.tokens",
+                "--testpref",
+                "examples/language_model/wikitext-103/wiki.test.tokens",
+                "--destdir",
+                "data-bin/wikitext-103",
+                "--workers",
+                "20"
+            
+            ]
         }
+        
     ]
 }
