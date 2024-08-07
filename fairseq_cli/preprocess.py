@@ -296,7 +296,7 @@ def main(args):
     target = not args.only_source
 
     if not args.srcdict and os.path.exists(_dict_path(args.source_lang, args.destdir)):
-        r\aise FileExistsError(_dict_path(args.source_lang, args.destdir))
+        raise FileExistsError(_dict_path(args.source_lang, args.destdir))
 
     if (
         target
