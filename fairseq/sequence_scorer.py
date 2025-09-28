@@ -67,6 +67,16 @@ class SequenceScorer(object):
             model.eval()
             decoder_out = model(**net_input)
             attn = decoder_out[1] if len(decoder_out) > 1 else None
+
+            #Save layer states if requested
+            inner_states = attn.get('inner_states', None)
+            if inner_states is not None:
+                inner_states = inner_states[1:] # skip the inputs to the first layer (only pos embeddings word_embeddings)
+                n_layers = len(inner_states)
+                save_layers = kwargs.get("save_layers", [])
+                save_layers = [l if l >= 0 else n_layers-1 for l in save_layers]    
+                inner_states[-1] = decoder_out[0].transpose(1,0) # Replace last layer state with version after final layer norm
+            
             if type(attn) is dict:
                 attn = attn.get("attn", None)
 
@@ -124,6 +134,12 @@ class SequenceScorer(object):
             )
             tgt_len = ref.numel()
             avg_probs_i = avg_probs[i][start_idxs[i] : start_idxs[i] + tgt_len]
+            
+            # Save layer states if requested
+            save_states_i = None
+            if inner_states is not None:
+                save_states_i = [inner_states[l][start_idxs[i]:start_idxs[i] + tgt_len, i] for l in save_layers]
+
             score_i = avg_probs_i.sum() / tgt_len
             if avg_attn is not None:
                 avg_attn_i = avg_attn[i]
@@ -150,4 +166,9 @@ class SequenceScorer(object):
                     }
                 ]
             )
+
+            # Save layer states if requested
+            if save_states_i is not None:
+                hypos[-1][0].update( {f"layer_{layer}_states" : states for layer, states in zip(save_layers,save_states_i)} )
+       
         return hypos

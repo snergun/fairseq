@@ -1,0 +1,4 @@
+git clone https://$GIT_USERNAME:$GIT_PASSWORD@github.com/snergun/fairseq.git;
+cd fairseq;
+pip install --editable .
+pip install fastBPE sacremoses

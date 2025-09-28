@@ -1,0 +1,75 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python Debugger: eval_lm.py.py",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args": [
+                "data-bin/wikitext-103",
+                "--path",
+                "/base-vol-2/fairseq/models/adaptive_lm_wiki103.v2/model.pt",
+                "--batch-size",
+                "2",
+                "--tokens-per-sample",
+                "512",
+                "--context-window",
+                "400"
+            ]
+        },
+        {
+            "name": "Python Debugger: preprocess.py.py",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args": [
+                "--only-source",
+                "--trainpref",
+                "examples/language_model/wikitext-103/wiki.train.tokens",
+                "--validpref",
+                "examples/language_model/wikitext-103/wiki.valid.tokens",
+                "--testpref",
+                "examples/language_model/wikitext-103/wiki.test.tokens",
+                "--destdir",
+                "data-bin/wikitext-103",
+                "--workers",
+                "20"
+            
+            ]
+        }
+        
+    ]
+}
+{
+    "configurations": [
+        {
+            "name": "Python: Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Python Debugger: ADT Eval",
+            "type": "debugpy",
+            "python": "/opt/conda/envs/fairseq/bin/python",
+            "request": "launch",
+            "program": "fairseq_cli/eval_lm.py",
+            "console": "integratedTerminal",
+            "args": [
+                "examples/language_model/adaptive_lm_gbw_huge/data-bin",
+                "--path", "examples/language_model/adaptive_lm_gbw_huge/model.pt",
+                "--gen-subset", "valid",
+                "--max-tokens", "2048",
+                "--sample-break-mode", "eos",
+            ],
+            "cwd": "${workspaceFolder}"
+        },
+    ]
+}

@@ -33,6 +33,9 @@ logging.basicConfig(
 )
 logger = logging.getLogger("fairseq_cli.eval_lm")
 
+# MINE
+import numpy as np
+from numpy.lib.format import open_memmap
 
 def eval_lm(
     models: List[fairseq.models.FairseqModel],
@@ -45,6 +48,8 @@ def eval_lm(
     softmax_batch: int = 0,
     remove_bos_token: bool = False,
     device: Optional[torch.device] = None,
+    cfg: Optional[DictConfig] = None,
+    dataset: Optional[fairseq.data.FairseqDataset] = None,
 ):
     """
     Args:
@@ -84,7 +89,32 @@ def eval_lm(
 
     score_sum = 0.0
     count = 0
-
+    os.makedirs(cfg.common_eval.results_path, exist_ok=True)
+    # Prepare to save features and probs if needed (MINE)
+    if cfg.eval_lm.save_layers != []:
+        n_layers = len(models[0].decoder.layers)
+        save_layers = [l if l != -1 else n_layers-1 for l in cfg.eval_lm.save_layers]
+        layer_memmaps = {
+            f"layer_{l}_states": open_memmap(
+                os.path.join(cfg.common_eval.results_path, f"{cfg.dataset.gen_subset if cfg.dataset.gen_subset != 'valid' else 'validation'}_layer_{l}_layer_output.npy"),
+                dtype=np.float32,
+                mode='w+',
+                shape=(sum(dataset.sizes), models[0].decoder.output_embed_dim)
+            ) for l in save_layers
+        }
+    if cfg.eval_lm.save_probs:
+        probs_memmap = open_memmap(
+            os.path.join(cfg.common_eval.results_path, f"{cfg.dataset.gen_subset if cfg.dataset.gen_subset != 'valid' else 'validation'}_prob.npy"),
+            dtype=np.float32,
+            mode='w+',
+            shape=(sum(dataset.sizes),)
+            )
+        targets_memmap = open_memmap(
+            os.path.join(cfg.common_eval.results_path, f"{cfg.dataset.gen_subset if cfg.dataset.gen_subset != 'valid' else 'validation'}_targets.npy"),
+            dtype=np.int64,
+            mode='w+',
+            shape=(sum(dataset.sizes),)
+            )
     if post_process is not None:
         if post_process in {"subword_nmt", "@@ "}:
             bpe_cont = post_process.rstrip()
@@ -108,10 +138,15 @@ def eval_lm(
         if "net_input" not in sample:
             continue
 
-        sample = utils.move_to_cuda(sample, device=device)
-
+        # Pointer for saving features and probs
+        sample_save_pointer = np.cumsum(np.concatenate([np.array([0]),dataset.sizes]))[:-1]
+        sample_save_pointer = {i: sample_save_pointer[i] for i in range(len(sample_save_pointer))}
+        
         gen_timer.start()
-        hypos = scorer.generate(models, sample)
+
+        sample = utils.move_to_cuda(sample, device=device)
+        
+        hypos = scorer.generate(models, sample, save_layers=cfg.eval_lm.save_layers)
         gen_timer.stop(sample["ntokens"])
 
         for i, hypos_i in enumerate(hypos):
@@ -121,6 +156,18 @@ def eval_lm(
             tokens = hypo["tokens"]
             tgt_len = tokens.numel()
             pos_scores = hypo["positional_scores"].float()
+            
+            # Save layer states and probs if requested
+            current_idx = sample_save_pointer[sample_id.item()]
+            if cfg.eval_lm.save_layers != []:
+                for l in save_layers:
+                    layer_memmaps[f"layer_{l}_states"][current_idx:current_idx + tgt_len, :] = \
+                        hypo[f"layer_{l}_states"].cpu().numpy()
+            if cfg.eval_lm.save_probs:
+                probs_memmap[current_idx:current_idx + tgt_len] = pos_scores.cpu().numpy()
+                targets_memmap[current_idx:current_idx + tgt_len] = tokens.cpu().numpy()
+            sample_save_pointer[sample_id.item()] += tgt_len
+
 
             if remove_bos_token:
                 assert hypo["tokens"][0].item() == target_dictionary.bos()
@@ -325,6 +372,8 @@ def main(cfg: DictConfig, **unused_kwargs):
         target_dictionary=task.target_dictionary,
         softmax_batch=cfg.eval_lm.softmax_batch,
         remove_bos_token=getattr(cfg.task, "add_bos_token", False),
+        cfg=cfg,
+        dataset=dataset,
     )
 
     logger.info(

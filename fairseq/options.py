@@ -349,6 +349,7 @@ def add_common_eval_args(group):
 def add_eval_lm_args(parser):
     group = parser.add_argument_group("LM Evaluation")
     add_common_eval_args(group)
+    # fmt: on
     gen_parser_from_dataclass(group, EvalLMConfig())
 
 

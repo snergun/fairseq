@@ -259,7 +259,7 @@ class LanguageModelingTask(LegacyFairseqTask):
             src_vocab=self.dictionary,
             tgt_vocab=self.output_dictionary,
             add_eos_for_other_targets=add_eos_for_other_targets,
-            shuffle=True,
+            shuffle=False, #Changed to False for debugging
             targets=self.targets,
             add_bos_token=self.args.add_bos_token,
             fixed_pad_length=fixed_pad_length,

@@ -1,3 +1,5 @@
+examples/language_model/wikitext-103/*
+examples/language_model/wikitext-103.tar.gz
 # JetBrains PyCharm IDE
 .idea/
 
@@ -139,3 +141,8 @@ wandb/
 nohup.out
 multirun
 outputs
+
+
+model.pt
+results/
+adaptive_lm_gbw_huge*

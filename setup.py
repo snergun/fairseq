@@ -11,6 +11,9 @@ import sys
 from setuptools import Extension, find_packages, setup
 from torch.utils import cpp_extension
 
+import site
+site.ENABLE_USER_SITE = "--user" in sys.argv[1:]
+
 if sys.version_info < (3, 6):
     sys.exit("Sorry, Python >= 3.6 is required for fairseq.")
 

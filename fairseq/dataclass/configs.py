@@ -1052,7 +1052,8 @@ class CommonEvalConfig(FairseqDataclass):
     )
     results_path: Optional[str] = field(
         default=None, metadata={"help": "path to save eval results (optional)"}
-    )
+    ) 
+
 
 
 @dataclass
@@ -1080,6 +1081,14 @@ class EvalLMConfig(FairseqDataclass):
         metadata={
             "help": "if BxT is more than this, will batch the softmax over vocab to this amount of tokens, in order to fit into GPU memory"
         },
+    )    
+    save_layers: List[int] = field(
+        default_factory=list,
+        metadata={"help": "Layers to save features from. -1 for last layer, 0 for first layer."},
+    )
+    save_probs: bool = field(
+        default=False,
+        metadata={"help": "if set, save target word probabilities to numpy memmap"},
     )
 
 
