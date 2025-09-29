@@ -27,4 +27,4 @@ python -u fairseq_cli/eval_lm.py \
     --save-probs \
     --batch-size 64 \
     --results-path $MODEL_PATH/results \
-    --gen-subset test \
+    --gen-subset valid \
