@@ -23,14 +23,15 @@ torch.save({'model': cp['model']}, 'adaptive_lm_gbw_huge/model.pt')
 print('Model conversion completed!')
 "
 # Save layer outputs and target words
-MODEL_PATH=adaptive_lm_gbw_huge
+cd ../..
+MODEL_PATH=examples/language_model/adaptive_lm_gbw_huge
 python -u fairseq_cli/eval_lm.py \
     $MODEL_PATH/data-bin \
-    --path $MODEL_PATH/model.pt \
+    --path $MODEL_PATH/fq_model.pt \
     --sample-break-mode eos \
     --max-tokens 2048 \
     --save-layers -1 \
     --save-probs \
     --batch-size 64 \
     --results-path $MODEL_PATH/results \
-    --gen-subset valid \
+    --gen-subset valid 
