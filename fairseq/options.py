@@ -200,6 +200,8 @@ def get_parser(desc, default_task="translation"):
                         help='log progress every N batches (when progress bar is disabled)')
     parser.add_argument('--log-format', default=None, help='log format to use',
                         choices=['json', 'none', 'simple', 'tqdm'])
+    parser.add_argument('--log-wandb', action='store_true', help='use Weights and Biases for logging')  
+    parser.add_argument('--wandb-project', default='fairseq', help='Weights and Biases project name')
     parser.add_argument('--tensorboard-logdir', metavar='DIR', default='',
                         help='path to save logs for tensorboard, should match --logdir '
                              'of running tensorboard (default: no tensorboard logging)')

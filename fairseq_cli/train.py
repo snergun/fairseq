@@ -29,7 +29,6 @@ from fairseq.logging import meters, metrics, progress_bar
 from fairseq.model_parallel.megatron_trainer import MegatronTrainer
 from fairseq.trainer import Trainer
 
-
 logging.basicConfig(
     format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
@@ -38,6 +37,8 @@ logging.basicConfig(
 )
 logger = logging.getLogger("fairseq_cli.train")
 
+import wandb
+import time
 
 def main(args):
     utils.import_user_module(args)
@@ -60,13 +61,20 @@ def main(args):
     # Setup task, e.g., translation, language modeling, etc.
     task = tasks.setup_task(args)
 
+    # Adding WANDB Logging
+    if args.log_wandb: 
+        run_name = f"{time.strftime('%m%d_%H%M%S')}"
+        wandb.init(project=args.wandb_project, name=run_name, config=vars(args))
+        logger.info("Wandb Run Name: {}".format(run_name))
+
     # Load valid dataset (we load training data below, based on the latest checkpoint)
     for valid_sub_split in args.valid_subset.split(","):
         task.load_dataset(valid_sub_split, combine=False, epoch=1)
 
     # Build model and criterion
     model = task.build_model(args)
-    torch.save(model.state_dict(), "model_init.pt")
+    # torch.save(model.state_dict(), "model_init.pt")
+    
     criterion = task.build_criterion(args)
     logger.info(model)
     logger.info("task: {} ({})".format(args.task, task.__class__.__name__))
@@ -214,6 +222,10 @@ def train(args, trainer, task, epoch_itr):
                 stats = get_training_stats(metrics.get_smoothed_values("train_inner"))
                 progress.log(stats, tag="train_inner", step=num_updates)
 
+                # log to wandb
+                if args.log_wandb:
+                    wandb.log(stats, step=num_updates)
+
                 # reset mid-epoch stats after each log interval
                 # the end-of-epoch stats will still be preserved
                 metrics.reset_meters("train_inner")
@@ -323,6 +335,10 @@ def validate(args, trainer, task, epoch_itr, subsets):
 
         # log validation stats
         stats = get_valid_stats(args, trainer, agg.get_smoothed_values())
+
+        if args.log_wandb:
+                wandb.log({f"valid_{subset}_{k}": v for k, v in stats.items()}, step=trainer.get_num_updates())
+
         progress.print(stats, tag=subset, step=trainer.get_num_updates())
 
         valid_losses.append(stats[args.best_checkpoint_metric])
