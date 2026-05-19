@@ -221,10 +221,10 @@ def train(args, trainer, task, epoch_itr):
             if num_updates % args.log_interval == 0:
                 stats = get_training_stats(metrics.get_smoothed_values("train_inner"))
                 progress.log(stats, tag="train_inner", step=num_updates)
-
+                stats.update({"step" : num_updates})
                 # log to wandb
                 if args.log_wandb:
-                    wandb.log(stats, step=num_updates)
+                    wandb.log(stats)
 
                 # reset mid-epoch stats after each log interval
                 # the end-of-epoch stats will still be preserved
@@ -335,7 +335,7 @@ def validate(args, trainer, task, epoch_itr, subsets):
 
         # log validation stats
         stats = get_valid_stats(args, trainer, agg.get_smoothed_values())
-
+        stats.update({"step" : trainer.get_num_updates()})
         if args.log_wandb:
                 wandb.log({f"valid_{subset}_{k}": v for k, v in stats.items()}, step=trainer.get_num_updates())
 

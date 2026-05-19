@@ -131,3 +131,7 @@ data/
 
 # Experimental Folder
 experimental/*
+
+
+#MINE
+wandb/*
